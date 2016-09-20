@@ -2,6 +2,8 @@ package org.netbeans.gradle.project.java.query;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.java.queries.JavadocForBinaryQuery;
 import org.netbeans.gradle.project.query.AbstractJavadocForBinaryQuery;
@@ -14,21 +16,24 @@ import org.openide.util.lookup.ServiceProviders;
 @ServiceProviders({@ServiceProvider(service = JavadocForBinaryQueryImplementation.class)})
 public final class AutoJavaJavadocForBinaryQuery extends AbstractJavadocForBinaryQuery {
     private static final URL[] NO_ROOTS = new URL[0];
-
-    private static final String JAVADOC_SUFFIX = "-javadoc.zip";
+    private static final List<String> JAVADOC_SUFFIXES = Arrays.asList("-javadoc.zip", "-javadoc.jar");
 
     public static FileObject javadocForJar(FileObject binaryRoot) {
-        String srcFileName = binaryRoot.getName() + JAVADOC_SUFFIX;
-
         FileObject dir = binaryRoot.getParent();
         if (dir == null) {
             return null;
         }
 
-        FileObject result = dir.getFileObject(srcFileName);
-        return result != null
-                ? FileUtil.getArchiveRoot(result)
-                : null;
+        for (String javadocSuffix : JAVADOC_SUFFIXES) {
+            String srcFileName = binaryRoot.getName() + javadocSuffix;
+            FileObject result = dir.getFileObject(srcFileName);
+            
+            if (null != result) {
+                return FileUtil.getArchiveRoot(result);
+            }
+        }
+
+        return null;
     }
 
     @Override
